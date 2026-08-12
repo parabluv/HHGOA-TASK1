@@ -711,9 +711,9 @@ export function Generator() {
           transition={{ duration: 0.5 }}
           className="order-2 md:order-1"
         >
-          <div className="rounded-3xl border border-border bg-card/60 p-5 backdrop-blur-sm sm:p-6">
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.35)] hover:border-white/20 transition-all duration-300 sm:p-6">
             {/* format toggle */}
-            <div className="mb-6 grid grid-cols-2 gap-1 rounded-2xl bg-secondary/60 p-1">
+            <div className="mb-6 grid grid-cols-2 gap-1 rounded-2xl bg-white/[0.04] border border-white/5 p-1 backdrop-blur-md">
               {(["pfp", "card"] as Format[]).map((f) => (
                 <button
                   key={f}
@@ -963,7 +963,7 @@ export function Generator() {
                     maxLength={12}
                     onChange={(e) => setCustomText(e.target.value)}
                     placeholder="Type custom word..."
-                    className="w-full rounded-xl border border-input bg-secondary/50 px-3.5 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30"
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-sm outline-none transition focus:border-gold/50 focus:ring-2 focus:ring-gold/15 backdrop-blur-md text-foreground placeholder:text-muted-foreground/50 hover:border-white/15"
                   />
                   <Button
                     type="button"
@@ -978,15 +978,15 @@ export function Generator() {
 
               {/* Active sticker editor panel */}
               {stickers.length > 0 && (
-                <div className="rounded-2xl border border-border bg-secondary/35 p-3.5 space-y-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                      Select Stamp
-                    </label>
-                    <select
-                      value={selectedStickerId || ""}
-                      onChange={(e) => setSelectedStickerId(e.target.value || null)}
-                      className="rounded-lg border border-input bg-background/80 px-2 py-1 text-xs outline-none focus:border-primary"
+                  <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-3.5 space-y-4 shadow-sm backdrop-blur-md">
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Select Stamp
+                      </label>
+                      <select
+                        value={selectedStickerId || ""}
+                        onChange={(e) => setSelectedStickerId(e.target.value || null)}
+                        className="rounded-lg border border-white/10 bg-[#120a1c] px-2 py-1.5 text-xs outline-none focus:border-gold/50 focus:ring-2 focus:ring-gold/15 text-foreground backdrop-blur-md"
                     >
                       <option value="">-- Choose sticker --</option>
                       {stickers.map((s, idx) => (
@@ -1075,7 +1075,7 @@ export function Generator() {
                         maxLength={22}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Ada Lovelace"
-                        className="w-full rounded-xl border border-input bg-secondary/50 px-3.5 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30"
+                        className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-sm outline-none transition focus:border-gold/50 focus:ring-2 focus:ring-gold/15 backdrop-blur-md text-foreground placeholder:text-muted-foreground/50 hover:border-white/15"
                       />
                     </Field>
 
@@ -1085,14 +1085,14 @@ export function Generator() {
                         maxLength={34}
                         onChange={(e) => setRole(e.target.value)}
                         placeholder="Full-stack Dev"
-                        className="w-full rounded-xl border border-input bg-secondary/50 px-3.5 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30"
+                        className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-sm outline-none transition focus:border-gold/50 focus:ring-2 focus:ring-gold/15 backdrop-blur-md text-foreground placeholder:text-muted-foreground/50 hover:border-white/15"
                       />
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {ROLES.map((r) => (
                           <button
                             key={r}
                             onClick={() => setRole(r)}
-                            className="rounded-full border border-border bg-secondary/40 px-2.5 py-1 text-xs text-muted-foreground transition hover:border-primary/50 hover:text-foreground"
+                            className="rounded-full border border-white/5 bg-white/[0.03] px-2.5 py-1 text-xs text-muted-foreground transition hover:border-white/20 hover:text-foreground hover:bg-white/[0.06] backdrop-blur-sm"
                           >
                             {r}
                           </button>
@@ -1106,7 +1106,7 @@ export function Generator() {
                           value={builderId}
                           maxLength={15}
                           onChange={(e) => setBuilderId(e.target.value)}
-                          className="w-full rounded-xl border border-input bg-secondary/50 px-3.5 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30"
+                          className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-sm outline-none transition focus:border-gold/50 focus:ring-2 focus:ring-gold/15 backdrop-blur-md text-foreground placeholder:text-muted-foreground/50 hover:border-white/15"
                         />
                         <Button
                           type="button"
@@ -1127,7 +1127,7 @@ export function Generator() {
                           value={title}
                           maxLength={26}
                           onChange={(e) => setTitle(e.target.value)}
-                          className="w-full rounded-xl border border-input bg-secondary/50 px-3.5 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30"
+                          className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-sm outline-none transition focus:border-gold/50 focus:ring-2 focus:ring-gold/15 backdrop-blur-md text-foreground placeholder:text-muted-foreground/50 hover:border-white/15"
                         />
                         <Button
                           type="button"
@@ -1217,7 +1217,7 @@ export function Generator() {
           className="order-1 md:order-2"
         >
           <div className="sticky top-6 flex flex-col items-center">
-            <div className="glow-ring rounded-3xl bg-background/60 p-2">
+            <div className="glow-ring rounded-3xl border border-white/10 bg-white/[0.03] p-2 backdrop-blur-xl shadow-2xl">
               <motion.canvas
                 key={format}
                 ref={canvasRef}
@@ -1293,7 +1293,7 @@ function Slider({
         step={step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-2 w-full cursor-pointer appearance-none rounded-full bg-secondary accent-primary"
+        className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-primary focus:outline-none"
       />
     </label>
   );

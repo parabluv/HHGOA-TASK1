@@ -45,11 +45,11 @@ export function Uploader({ onFile, processing, processingText, compact }: Upload
         handleFiles(e.dataTransfer.files)
       }}
       className={[
-        "group relative flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-dashed text-center transition-all duration-300",
+        "group relative flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-dashed text-center transition-all duration-300 backdrop-blur-md",
         compact ? "px-4 py-6" : "px-6 py-12",
         drag
-          ? "border-primary bg-primary/10 scale-[1.01]"
-          : "border-border bg-secondary/40 hover:border-primary/60 hover:bg-secondary/70",
+          ? "border-primary bg-primary/10 scale-[1.01] shadow-[0_0_20px_rgba(var(--primary),0.2)]"
+          : "border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.06] shadow-sm",
       ].join(" ")}
     >
       <input
