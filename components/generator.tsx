@@ -649,14 +649,17 @@ export function Generator() {
       });
 
       const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || `Server responded with status ${response.status}`);
+      }
       if (data.url) {
         cloudImageUrl = data.url;
       } else {
-        throw new Error("Upload failed");
+        throw new Error("No URL returned from upload server");
       }
     } catch (error) {
       console.error(error);
-      alert("Failed to prepare image for sharing. Please download it instead.");
+      alert(`Failed to prepare image for sharing: ${error instanceof Error ? error.message : "Unknown error"}. Please download it instead.`);
       setProcessing(false);
       setProcessingText("");
       return;
