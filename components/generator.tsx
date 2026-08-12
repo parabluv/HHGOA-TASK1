@@ -610,68 +610,9 @@ export function Generator() {
       /* clipboard blocked — non-fatal */
     }
 
-    // Direct platform web intent flow for consistent post composition with prefilled text and dynamic OG image card showcasing PFP + Pass bundle
-    setProcessing(true);
-    setProcessingText("Generating share link...");
-    let cloudImageUrl = "";
-
-    try {
-      const combinedCanvas = document.createElement("canvas");
-      renderCombinedGraphic(combinedCanvas, {
-        format,
-        image,
-        name,
-        role,
-        title,
-        focusX,
-        focusY,
-        zoom,
-        bgColor,
-        stickers,
-        selectedStickerId,
-        qrImage,
-        frameImage,
-        borderColor,
-      });
-
-      const blob = await new Promise<Blob | null>((resolve) => {
-        combinedCanvas.toBlob((b) => resolve(b), "image/jpeg", 0.82);
-      });
-
-      if (!blob) throw new Error("No image generated");
-
-      const formData = new FormData();
-      formData.append("file", blob, "hh-goa-bundle.jpg");
-
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || `Server responded with status ${response.status}`);
-      }
-      if (data.url) {
-        cloudImageUrl = data.url;
-      } else {
-        throw new Error("No URL returned from upload server");
-      }
-    } catch (error) {
-      console.error(error);
-      alert(`Failed to prepare image for sharing: ${error instanceof Error ? error.message : "Unknown error"}. Please download it instead.`);
-      setProcessing(false);
-      setProcessingText("");
-      return;
-    }
-    setProcessing(false);
-    setProcessingText("");
-
-    // Construct the dynamic share link
+    // Construct the share link pointing back to the website
     const baseUrl = getBaseUrl();
-    const dynamicShareLink = `${baseUrl}/share?img=${encodeURIComponent(
-      cloudImageUrl,
-    )}`;
+    const dynamicShareLink = baseUrl;
 
     const text = encodeURIComponent(caption);
     const encodedShareUrl = encodeURIComponent(dynamicShareLink);
