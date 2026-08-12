@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "motion/react"
-import { ArrowDown, Zap } from "lucide-react"
+import { ArrowDown, Zap, Camera } from "lucide-react"
 
 const container = {
   hidden: {},
@@ -41,9 +41,11 @@ export function Hero() {
 
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-6">
         <div className="flex items-center gap-2">
-          <span className="size-3 rounded-full bg-gold shadow-[0_0_20px_2px_oklch(0.83_0.14_80_/_0.6)]" />
-          <span className="font-display text-lg font-bold tracking-tight">
-            HH GOA <span className="text-primary">2026</span>
+          <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-[0_0_20px_2px_oklch(0.66_0.21_350_/_0.3)]">
+            <Camera className="size-5" />
+          </div>
+          <span className="font-display text-lg font-black tracking-tighter uppercase">
+            FRAME<span className="text-gold">IT</span>
           </span>
         </div>
         <a
