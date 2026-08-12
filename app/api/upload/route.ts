@@ -12,7 +12,8 @@ export async function POST(request: Request) {
 
     // Upload the file to Vercel Blob
     // 'public' access means anyone with the URL can view the image (required for social scrapers)
-    const blob = await put(`hh-goa-${Date.now()}.png`, file, {
+    const ext = file.name.split('.').pop() || 'png';
+    const blob = await put(`hh-goa-${Date.now()}.${ext}`, file, {
       access: "public",
     });
 

@@ -5,7 +5,23 @@ import { motion, AnimatePresence } from "motion/react";
 import { Download, Shuffle, Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Uploader } from "@/components/uploader";
-import { renderGraphic, generateTitle, type Format, type Sticker } from "@/lib/graphic";
+import { renderGraphic, renderCombinedGraphic, generateTitle, type Format, type Sticker } from "@/lib/graphic";
+
+function getBaseUrl() {
+  if (typeof window === "undefined") {
+    return process.env.NEXT_PUBLIC_VERCEL_URL
+      ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+      : "https://hhgoa2026.app";
+  }
+  const host = window.location.hostname;
+  if (host === "localhost" || host === "127.0.0.1") {
+    if (process.env.NEXT_PUBLIC_VERCEL_URL) {
+      return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
+    }
+    return "https://hhgoa2026.app";
+  }
+  return window.location.origin;
+}
 
 /* ensure the canvas fonts are actually available before drawing */
 let fontsReady: Promise<void> | null = null;
@@ -124,6 +140,7 @@ const ROLES = [
 ];
 
 const BG_PRESETS = [
+  { name: "Goa Beach Green", key: "goa-green", color: "bg-[#114030]" },
   { name: "Sunset Plum", key: "plum", color: "bg-[#1c1029]" },
   { name: "Peach Sun", key: "peach", color: "bg-gradient-to-tr from-[#fcb69f] to-[#ffecd2]" },
   { name: "Neon Mint", key: "mint", color: "bg-gradient-to-tr from-[#10b981] to-[#70ffd0]" },
@@ -136,6 +153,17 @@ const BG_PRESETS = [
   { name: "Aura Hologram", key: "hologram", color: "bg-gradient-to-tr from-[#e0c3fc] to-[#8ec5fc]" },
   { name: "Lime Burst", key: "lime", color: "bg-gradient-to-tr from-[#78ffd6] to-[#a8ff78]" },
   { name: "Golden Hour", key: "gold", color: "bg-gradient-to-tr from-[#fda085] to-[#f6d365]" },
+];
+
+const BORDER_PRESETS = [
+  { name: "Sunset Gradient", key: "sunset", color: "bg-gradient-to-tr from-[#ffcf6a] via-[#ff6a4d] to-[#ff4d9d]" },
+  { name: "Neon Mint", key: "mint", color: "bg-[#10b981]" },
+  { name: "Electric Sky", key: "sky", color: "bg-[#0072ff]" },
+  { name: "Cyber Pink", key: "pink", color: "bg-[#ff4d9d]" },
+  { name: "Vibrant Coral", key: "coral", color: "bg-[#ff6a4d]" },
+  { name: "Golden Hour", key: "gold", color: "bg-[#ffcf6a]" },
+  { name: "Goa Beach Green", key: "green", color: "bg-[#114030]" },
+  { name: "Cream White", key: "white", color: "bg-[#ffffff]" },
 ];
 
 const HACKER_EMOJIS = [
@@ -185,11 +213,13 @@ export function Generator() {
   const [justDownloaded, setJustDownloaded] = useState(false);
 
   // New customization states
-  const [bgColor, setBgColor] = useState("plum");
+  const [bgColor, setBgColor] = useState("goa-green");
   const [stickers, setStickers] = useState<Sticker[]>([]);
   const [selectedStickerId, setSelectedStickerId] = useState<string | null>(null);
   const [customText, setCustomText] = useState("");
   const [qrImage, setQrImage] = useState<HTMLImageElement | null>(null);
+  const [frameImage, setFrameImage] = useState<HTMLImageElement | null>(null);
+  const [borderColor, setBorderColor] = useState("sunset");
 
   const addEmojiSticker = (emoji: string) => {
     const newSticker: Sticker = {
@@ -352,8 +382,10 @@ export function Generator() {
       stickers,
       selectedStickerId,
       qrImage,
+      frameImage,
+      borderColor,
     });
-  }, [format, image, name, role, title, focusX, focusY, zoom, bgColor, stickers, selectedStickerId, qrImage]);
+  }, [format, image, name, role, title, focusX, focusY, zoom, bgColor, stickers, selectedStickerId, qrImage, frameImage, borderColor]);
 
   // redraw whenever anything changes (after fonts are ready)
   useEffect(() => {
@@ -396,8 +428,8 @@ export function Generator() {
     const generateQR = async () => {
       try {
         const QRCode = (await import("qrcode")).default;
-        const origin = typeof window !== "undefined" ? window.location.origin : "https://hhgoa2026.app";
-        const dataUrl = await QRCode.toDataURL(origin, {
+        const originUrl = getBaseUrl();
+        const dataUrl = await QRCode.toDataURL(originUrl, {
           margin: 1,
           width: 240,
           color: {
@@ -413,6 +445,15 @@ export function Generator() {
       }
     };
     generateQR();
+  }, []);
+
+  // Load frame template image once on mount
+  useEffect(() => {
+    const img = new Image();
+    img.src = "/frame.jpg";
+    img.onload = () => {
+      setFrameImage(img);
+    };
   }, []);
 
   const handleFile = useCallback(async (file: File) => {
@@ -559,19 +600,38 @@ export function Generator() {
       /* clipboard blocked — non-fatal */
     }
 
-    const sharedNatively = await prepareShare();
-    if (sharedNatively) return;
-
-    // Desktop Flow: Upload to Cloud first for dynamic Open Graph preview
+    // Direct platform web intent flow for consistent post composition with prefilled text and dynamic OG image card showcasing PFP + Pass bundle
     setProcessing(true);
+    setProcessingText("Generating share link...");
     let cloudImageUrl = "";
 
     try {
-      const blob = await getBlob();
+      const combinedCanvas = document.createElement("canvas");
+      renderCombinedGraphic(combinedCanvas, {
+        format,
+        image,
+        name,
+        role,
+        title,
+        focusX,
+        focusY,
+        zoom,
+        bgColor,
+        stickers,
+        selectedStickerId,
+        qrImage,
+        frameImage,
+        borderColor,
+      });
+
+      const blob = await new Promise<Blob | null>((resolve) => {
+        combinedCanvas.toBlob((b) => resolve(b), "image/jpeg", 0.82);
+      });
+
       if (!blob) throw new Error("No image generated");
 
       const formData = new FormData();
-      formData.append("file", blob, filename);
+      formData.append("file", blob, "hh-goa-bundle.jpg");
 
       const response = await fetch("/api/upload", {
         method: "POST",
@@ -588,15 +648,14 @@ export function Generator() {
       console.error(error);
       alert("Failed to prepare image for sharing. Please download it instead.");
       setProcessing(false);
+      setProcessingText("");
       return;
     }
     setProcessing(false);
+    setProcessingText("");
 
     // Construct the dynamic share link
-    const baseUrl =
-      typeof window !== "undefined"
-        ? window.location.origin
-        : "https://hhgoa2026.app";
+    const baseUrl = getBaseUrl();
     const dynamicShareLink = `${baseUrl}/share?img=${encodeURIComponent(
       cloudImageUrl,
     )}`;
@@ -729,6 +788,32 @@ export function Generator() {
                   >
                     {bgColor === preset.key && (
                       <span className="absolute inset-0 flex items-center justify-center text-[10px] text-primary-foreground font-bold">
+                        ✓
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* border color presets */}
+            <div className="mt-5 space-y-3.5 border-t border-border pt-5">
+              <h3 className="font-display text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Border Color
+              </h3>
+              <div className="flex flex-wrap gap-2.5">
+                {BORDER_PRESETS.map((preset) => (
+                  <button
+                    key={preset.key}
+                    type="button"
+                    onClick={() => setBorderColor(preset.key)}
+                    title={preset.name}
+                    className={`relative size-8 rounded-full border border-border/80 transition hover:scale-110 active:scale-95 ${preset.color} ${
+                      borderColor === preset.key ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""
+                    }`}
+                  >
+                    {borderColor === preset.key && (
+                      <span className="absolute inset-0 flex items-center justify-center text-[10px] text-primary-foreground font-bold drop-shadow">
                         ✓
                       </span>
                     )}
@@ -1069,11 +1154,25 @@ export function Generator() {
                 />
               </div>
             </div>
-            <p className="mt-3 text-center text-xs leading-relaxed text-muted-foreground">
+
+            <AnimatePresence>
+              {justDownloaded && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3 text-center text-xs text-emerald-400 font-medium">
+                    ✨ Image saved! Predefined post text has been copied to your clipboard. Paste it directly as your post or comment on X!
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <p className="mt-4 text-center text-xs leading-relaxed text-muted-foreground">
               Caption is pre-filled with{" "}
-              <span className="text-gold">#FrameInGoa #HHGoa2026</span>. On
-              mobile the image attaches automatically; on desktop it downloads
-              so you can attach it in one tap.
+              <span className="text-gold">#FrameInGoa #HHGoa2026</span>. Click X to post directly with preview, or click Download to copy share text to clipboard!
             </p>
           </div>
         </motion.div>

@@ -25,11 +25,13 @@ export interface RenderOptions {
   stickers?: Sticker[]
   selectedStickerId?: string | null
   qrImage?: HTMLImageElement | null
+  frameImage?: HTMLImageElement | null
+  borderColor?: string
 }
 
 export const PFP_SIZE = 1080
 export const CARD_W = 1080
-export const CARD_H = 1350
+export const CARD_H = 1530
 
 /* ---------- palette (hex mirrors of the CSS tokens) ---------- */
 const PLUM = "#1c1029"
@@ -94,6 +96,30 @@ function sunsetGradient(
   g.addColorStop(0.5, CORAL)
   g.addColorStop(1, MAGENTA)
   return g
+}
+
+function getBorderStroke(
+  ctx: CanvasRenderingContext2D,
+  key: string | undefined,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+) {
+  if (!key || key === "sunset") {
+    return sunsetGradient(ctx, x0, y0, x1, y1)
+  }
+  const colors: Record<string, string> = {
+    mint: "#10b981",
+    sky: "#0072ff",
+    pink: "#ff4d9d",
+    coral: "#ff6a4d",
+    gold: "#ffcf6a",
+    green: "#114030",
+    cream: "#fbeee2",
+    white: "#ffffff",
+  }
+  return colors[key] || key
 }
 
 /** subtle sun-into-horizon glow used across both formats */
@@ -307,6 +333,9 @@ function renderPFP(ctx: CanvasRenderingContext2D, o: RenderOptions) {
   } else if (themeKey === "lime") {
     bg.addColorStop(0, "#a8ff78")
     bg.addColorStop(1, "#78ffd6")
+  } else if (themeKey === "goa-green") {
+    bg.addColorStop(0, "#114030")
+    bg.addColorStop(1, "#08341b")
   } else if (themeKey === "gold") {
     bg.addColorStop(0, "#f6d365")
     bg.addColorStop(1, "#fda085")
@@ -340,7 +369,7 @@ function renderPFP(ctx: CanvasRenderingContext2D, o: RenderOptions) {
 
   // gradient frame ring
   ctx.lineWidth = 20
-  ctx.strokeStyle = sunsetGradient(ctx, pad, pad, S - pad, S - pad)
+  ctx.strokeStyle = getBorderStroke(ctx, o.borderColor, pad + 10, pad + 10, inner - 20, inner - 20)
   roundRect(ctx, pad + 10, pad + 10, inner - 20, inner - 20, 52)
   ctx.stroke()
 
@@ -369,12 +398,12 @@ function renderPFP(ctx: CanvasRenderingContext2D, o: RenderOptions) {
   ctx.textAlign = "left"
   ctx.textBaseline = "alphabetic"
   ctx.font = `700 72px 'Space Grotesk', ui-sans-serif, sans-serif`
-  ctx.fillStyle = sunsetGradient(ctx, pad + 60, S - 150, S - pad, S - 90)
-  ctx.fillText("#FrameInGoa", pad + 60, S - 100)
+  ctx.fillStyle = sunsetGradient(ctx, pad + 60, S - 210, S - pad, S - 130)
+  ctx.fillText("#FrameInGoa", pad + 60, S - 145)
 
   ctx.font = `500 30px 'Inter', ui-sans-serif, sans-serif`
   ctx.fillStyle = "rgba(251,238,226,0.72)"
-  ctx.fillText("Hacker House · Goa · 2026", pad + 62, S - 62)
+  ctx.fillText("Hacker House · Goa · 2026", pad + 62, S - 102)
 
   // Draw QR code
   if (o.qrImage) {
@@ -406,6 +435,74 @@ function renderPFP(ctx: CanvasRenderingContext2D, o: RenderOptions) {
 function renderCard(ctx: CanvasRenderingContext2D, o: RenderOptions) {
   const W = CARD_W
   const H = CARD_H
+
+  if (o.frameImage) {
+    const scaleX = W / 723
+    const scaleY = H / 1024
+
+    // 1. Background frame template
+    ctx.drawImage(o.frameImage, 0, 0, W, H)
+
+    // 2. Photo inside the photo box
+    const px = 402 * scaleX
+    const py = 468 * scaleY
+    const pw = 221 * scaleX
+    const ph = 169 * scaleY
+
+    ctx.save()
+    roundRect(ctx, px, py, pw, ph, 22)
+    ctx.clip()
+    if (o.image) {
+      drawImageCover(ctx, o.image, px, py, pw, ph, o.focusX, o.focusY, o.zoom)
+    } else {
+      placeholderPhoto(ctx, px, py, pw, ph)
+    }
+    ctx.restore()
+
+    // Draw dark border around photo to blend it beautifully with the design style
+    ctx.lineWidth = 4
+    ctx.strokeStyle = getBorderStroke(ctx, o.borderColor || "green", px, py, pw, ph)
+    roundRect(ctx, px, py, pw, ph, 22)
+    ctx.stroke()
+
+    // 3. Name inside NAME box
+    const nameStr = o.name || "Your Name"
+    ctx.fillStyle = "#114030"
+    ctx.textAlign = "center"
+    ctx.textBaseline = "middle"
+    ctx.font = `700 32px 'Space Grotesk', ui-sans-serif, sans-serif`
+    ctx.fillText(nameStr, ((80 + 342) / 2) * scaleX, ((795 + 828) / 2) * scaleY)
+
+    // 4. Role inside ROLE box
+    const roleStr = o.role || "Builder / Maker"
+    ctx.fillStyle = "#114030"
+    ctx.textAlign = "center"
+    ctx.textBaseline = "middle"
+    ctx.font = `500 24px 'Inter', ui-sans-serif, sans-serif`
+    ctx.fillText(roleStr, ((80 + 342) / 2) * scaleX, ((865 + 896) / 2) * scaleY)
+
+    // 5. Builder Title inside BUILDER ID box
+    const titleStr = o.title || generateTitle(o.name)
+    ctx.fillStyle = "#114030"
+    ctx.textAlign = "center"
+    ctx.textBaseline = "middle"
+    ctx.font = `700 26px 'Space Grotesk', ui-sans-serif, sans-serif`
+    ctx.fillText(titleStr, ((123 + 596) / 2) * scaleX, ((954 + 985) / 2) * scaleY)
+
+    // 6. QR Code inside QR CODE box
+    if (o.qrImage) {
+      const qx = 465 * scaleX
+      const qy = 793 * scaleY
+      const qw = 127 * scaleX
+      const qh = 129 * scaleY
+      const pad = 8
+      ctx.drawImage(o.qrImage, qx + pad, qy + pad, qw - pad * 2, qh - pad * 2)
+    }
+
+    // 7. Stickers/Stamps layered on top
+    drawStickers(ctx, o.stickers, W, H, o.selectedStickerId)
+    return
+  }
 
   // background wash based on selected bgColor preset
   const bg = ctx.createLinearGradient(0, 0, 0, H)
@@ -450,6 +547,10 @@ function renderCard(ctx: CanvasRenderingContext2D, o: RenderOptions) {
     bg.addColorStop(0, "#a8ff78")
     bg.addColorStop(0.55, "#90ffd7")
     bg.addColorStop(1, "#78ffd6")
+  } else if (themeKey === "goa-green") {
+    bg.addColorStop(0, "#114030")
+    bg.addColorStop(0.55, "#0b2e21")
+    bg.addColorStop(1, "#08341b")
   } else if (themeKey === "gold") {
     bg.addColorStop(0, "#f6d365")
     bg.addColorStop(0.55, "#faae75")
@@ -502,7 +603,7 @@ function renderCard(ctx: CanvasRenderingContext2D, o: RenderOptions) {
   ctx.restore()
   // photo frame stroke
   ctx.lineWidth = 5
-  ctx.strokeStyle = sunsetGradient(ctx, pad, photoY, W - pad, photoY + photoH)
+  ctx.strokeStyle = getBorderStroke(ctx, o.borderColor, pad, photoY, W - pad, photoY + photoH)
   roundRect(ctx, pad, photoY, photoW, photoH, 34)
   ctx.stroke()
 
@@ -593,4 +694,63 @@ export function renderGraphic(canvas: HTMLCanvasElement, o: RenderOptions) {
     canvas.height = CARD_H
     renderCard(ctx, o)
   }
+}
+
+export function renderCombinedGraphic(canvas: HTMLCanvasElement, o: RenderOptions) {
+  // Create offscreen canvases to render individual formats
+  const pfpCanvas = document.createElement("canvas")
+  const cardCanvas = document.createElement("canvas")
+
+  pfpCanvas.width = PFP_SIZE
+  pfpCanvas.height = PFP_SIZE
+  const pfpCtx = pfpCanvas.getContext("2d")
+  if (pfpCtx) renderPFP(pfpCtx, o)
+
+  cardCanvas.width = CARD_W
+  cardCanvas.height = CARD_H
+  const cardCtx = cardCanvas.getContext("2d")
+  if (cardCtx) renderCard(cardCtx, o)
+
+  const pad = 80
+  const gap = 80
+
+  // Combined layout dimensions:
+  // Width: pad (80) + PFP (1080) + gap (80) + Card (1080) + pad (80) = 2400
+  // Height: pad (80) + Card (1530) + pad (80) = 1690
+  canvas.width = 2400
+  canvas.height = 1690
+
+  const ctx = canvas.getContext("2d")
+  if (!ctx) return
+
+  // Beautiful tropical gradient background matching the Goa Beach Green theme
+  const bg = ctx.createLinearGradient(0, 0, 0, canvas.height)
+  bg.addColorStop(0, "#114030")
+  bg.addColorStop(0.5, "#0b2e21")
+  bg.addColorStop(1, "#08341b")
+  ctx.fillStyle = bg
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+  // Double ambient sun glows behind the panels for premium lighting
+  drawSunGlow(ctx, 450, 350, 750)
+  drawSunGlow(ctx, canvas.width - 450, canvas.height - 350, 850)
+
+  // Draw PFP (vertically centered relative to Card)
+  const pfpY = pad + (CARD_H - PFP_SIZE) / 2 // 80 + (1530 - 1080) / 2 = 305
+  ctx.save()
+  ctx.shadowColor = "rgba(0, 0, 0, 0.45)"
+  ctx.shadowBlur = 45
+  ctx.shadowOffsetX = 12
+  ctx.shadowOffsetY = 24
+  ctx.drawImage(pfpCanvas, pad, pfpY)
+  ctx.restore()
+
+  // Draw Card
+  ctx.save()
+  ctx.shadowColor = "rgba(0, 0, 0, 0.45)"
+  ctx.shadowBlur = 45
+  ctx.shadowOffsetX = 12
+  ctx.shadowOffsetY = 24
+  ctx.drawImage(cardCanvas, pad + PFP_SIZE + gap, pad)
+  ctx.restore()
 }
