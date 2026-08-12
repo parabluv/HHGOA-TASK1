@@ -23,6 +23,14 @@ function getBaseUrl() {
   return window.location.origin;
 }
 
+function generateBuilderId(seed?: string) {
+  const base = seed && seed.length ? seed : Math.random().toString();
+  let h = 0;
+  for (let i = 0; i < base.length; i++) h = (h * 31 + base.charCodeAt(i)) >>> 0;
+  const num = (h % 900) + 100; // 3-digit number [100, 999]
+  return `HHGOA-BID-${num}`;
+}
+
 /* ensure the canvas fonts are actually available before drawing */
 let fontsReady: Promise<void> | null = null;
 function ensureFonts() {
@@ -220,6 +228,7 @@ export function Generator() {
   const [qrImage, setQrImage] = useState<HTMLImageElement | null>(null);
   const [frameImage, setFrameImage] = useState<HTMLImageElement | null>(null);
   const [borderColor, setBorderColor] = useState("sunset");
+  const [builderId, setBuilderId] = useState(() => generateBuilderId("goa"));
 
   const addEmojiSticker = (emoji: string) => {
     const newSticker: Sticker = {
@@ -384,8 +393,9 @@ export function Generator() {
       qrImage,
       frameImage,
       borderColor,
+      builderId,
     });
-  }, [format, image, name, role, title, focusX, focusY, zoom, bgColor, stickers, selectedStickerId, qrImage, frameImage, borderColor]);
+  }, [format, image, name, role, title, focusX, focusY, zoom, bgColor, stickers, selectedStickerId, qrImage, frameImage, borderColor, builderId]);
 
   // redraw whenever anything changes (after fonts are ready)
   useEffect(() => {
@@ -1090,6 +1100,27 @@ export function Generator() {
                       </div>
                     </Field>
 
+                    <Field label="Builder ID">
+                      <div className="flex gap-2">
+                        <input
+                          value={builderId}
+                          maxLength={15}
+                          onChange={(e) => setBuilderId(e.target.value)}
+                          className="w-full rounded-xl border border-input bg-secondary/50 px-3.5 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30"
+                        />
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="icon"
+                          aria-label="Generate a new builder ID"
+                          onClick={() => setBuilderId(generateBuilderId())}
+                          className="shrink-0"
+                        >
+                          <Shuffle className="size-4" />
+                        </Button>
+                      </div>
+                    </Field>
+ 
                     <Field label="Builder title">
                       <div className="flex gap-2">
                         <input

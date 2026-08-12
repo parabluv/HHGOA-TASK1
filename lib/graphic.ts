@@ -27,6 +27,7 @@ export interface RenderOptions {
   qrImage?: HTMLImageElement | null
   frameImage?: HTMLImageElement | null
   borderColor?: string
+  builderId?: string
 }
 
 export const PFP_SIZE = 1080
@@ -481,13 +482,28 @@ function renderCard(ctx: CanvasRenderingContext2D, o: RenderOptions) {
     ctx.font = `500 24px 'Inter', ui-sans-serif, sans-serif`
     ctx.fillText(roleStr, ((80 + 342) / 2) * scaleX, ((865 + 896) / 2) * scaleY)
 
-    // 5. Builder Title inside BUILDER ID box
-    const titleStr = o.title || generateTitle(o.name)
+    // 5. Builder ID inside BUILDER ID box
+    const bidStr = o.builderId || "HHGOA-BID-000"
     ctx.fillStyle = "#114030"
     ctx.textAlign = "center"
     ctx.textBaseline = "middle"
+    ctx.font = `700 28px 'Space Grotesk', ui-sans-serif, sans-serif`
+    ctx.fillText(bidStr, ((123 + 596) / 2) * scaleX, ((954 + 985) / 2) * scaleY)
+ 
+    // 5b. Builder Title Chip (in the empty space below the Role box)
+    const titleStr = o.title || generateTitle(o.name)
     ctx.font = `700 26px 'Space Grotesk', ui-sans-serif, sans-serif`
-    ctx.fillText(titleStr, ((123 + 596) / 2) * scaleX, ((954 + 985) / 2) * scaleY)
+    const chipTxt = titleStr.toUpperCase()
+    const cw = ctx.measureText(chipTxt).width + 44
+    const chipX = 80 * scaleX
+    const chipY = 910 * scaleY - 20
+    ctx.fillStyle = sunsetGradient(ctx, chipX, chipY, chipX + cw, chipY + 48)
+    roundRect(ctx, chipX, chipY, cw, 48, 24)
+    ctx.fill()
+    ctx.fillStyle = "#114030"
+    ctx.textAlign = "left"
+    ctx.textBaseline = "middle"
+    ctx.fillText(chipTxt, chipX + 22, chipY + 25)
 
     // 6. QR Code inside QR CODE box
     if (o.qrImage) {
@@ -586,7 +602,7 @@ function renderCard(ctx: CanvasRenderingContext2D, o: RenderOptions) {
   ctx.fillText("BUILDER PASS", W - pad, pad + 6)
   ctx.font = `500 22px 'Inter', ui-sans-serif, sans-serif`
   ctx.fillStyle = "rgba(251,238,226,0.6)"
-  ctx.fillText("NO. 2026", W - pad, pad + 40)
+  ctx.fillText(o.builderId || "NO. 2026", W - pad, pad + 40)
 
   // photo
   const photoY = pad + 110
